@@ -34,31 +34,7 @@
  */
 package com.plantuml.ubrex;
 
-public class ChallengeOneOrMore implements Challenge {
-
-	private final Challenge origin;
-
-	public ChallengeOneOrMore(Challenge origin) {
-		this.origin = origin;
-	}
-
-	@Override
-	public ChallengeResult runChallenge(TextNavigator string, int position) {
-		Capture capture = Capture.EMPTY;
-
-		int currentPos = position;
-		while (true) {
-			final ChallengeResult shallWePass = origin.runChallenge(string, currentPos);
-			if (shallWePass.getFullCaptureLength() < 0)
-				if (currentPos > position)
-					return new ChallengeResult(currentPos - position, capture);
-				else
-					return new ChallengeResult(NO_MATCH);
-			if (shallWePass.getFullCaptureLength() == 0)
-				throw new IllegalStateException("infinite loop");
-			capture = capture.merge(shallWePass.getCapture());
-			currentPos += shallWePass.getFullCaptureLength();
-		}
-	}
-
+public enum CharClassType {
+	NORMAL,
+	NEGATIVE
 }

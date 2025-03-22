@@ -47,11 +47,11 @@ public class ChallengeZeroOrMore implements Challenge {
 		int currentPos = position;
 		while (true) {
 			final ChallengeResult tmp = origin.runChallenge(string, currentPos);
-			if (tmp.getInt() < 0)
+			if (tmp.getFullCaptureLength() < 0)
 				return new ChallengeResult(currentPos - position);
-			if (tmp.getInt() == 0)
+			if (tmp.getFullCaptureLength() == 0)
 				throw new IllegalStateException("infinite loop");
-			currentPos += tmp.getInt();
+			currentPos += tmp.getFullCaptureLength();
 		}
 	}
 

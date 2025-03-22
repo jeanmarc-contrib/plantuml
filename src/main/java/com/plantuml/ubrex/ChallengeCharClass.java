@@ -36,10 +36,15 @@ package com.plantuml.ubrex;
 
 public class ChallengeCharClass implements Challenge {
 
-	private final CharClass charClass;
+	private final CharClassRaw charClass;
 
-	public ChallengeCharClass(CharClass charClass) {
+	public ChallengeCharClass(CharClassRaw charClass) {
 		this.charClass = charClass;
+	}
+	
+	@Override
+	public String toString() {
+		return charClass.name();
 	}
 
 	@Override

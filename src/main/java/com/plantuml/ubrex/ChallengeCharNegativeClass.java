@@ -36,10 +36,15 @@ package com.plantuml.ubrex;
 
 public class ChallengeCharNegativeClass implements Challenge {
 
-	private final CharClass charClass;
+	private final CharClassRaw charClass;
 
-	public ChallengeCharNegativeClass(CharClass charClass) {
+	public ChallengeCharNegativeClass(CharClassRaw charClass) {
 		this.charClass = charClass;
+	}
+
+	@Override
+	public String toString() {
+		return "NOT-" + charClass.name();
 	}
 
 	@Override
