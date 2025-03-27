@@ -44,14 +44,6 @@ public class CharClass {
 		this.type = type;
 	}
 
-	public static CharClass normal(CharClassRaw charClassRaw) {
-		return new CharClass(charClassRaw, CharClassType.NORMAL);
-	}
-
-	public static CharClass negative(CharClassRaw charClassRaw) {
-		return new CharClass(charClassRaw, CharClassType.NEGATIVE);
-	}
-
 	public boolean matches(char ch) {
 		final boolean rawMatch = charClassRaw.internalMatches(ch);
 
