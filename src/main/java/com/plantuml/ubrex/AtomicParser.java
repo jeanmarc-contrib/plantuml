@@ -114,26 +114,23 @@ public class AtomicParser {
 	}
 
 	private Challenge manageClass(TextNavigator input) {
-		final Challenge result;
-		final CharClassRaw charClass;
+		final CharClass result;
 		System.err.println("input=" + input);
 		if (input.charAt(1) == '〤') {
 			input.jump(2);
-			charClass = CharClassRaw.fromDefinition(input);
-			result = new ChallengeCharNegativeClass(charClass);
+			result = CharClass.negative(CharClassRaw.fromDefinition(input));
 		} else {
 			input.jump(1);
-			charClass = CharClassRaw.fromDefinition(input);
 			final char toto = input.charAt(0);
 			System.err.println("toto=" + toto);
 			if (Character.isUpperCase(toto))
-				result = new ChallengeCharNegativeClass(charClass);
+				result = CharClass.negative(CharClassRaw.fromDefinition(input));
 			else
-				result = new ChallengeCharClass(charClass);
+				result = CharClass.normal(CharClassRaw.fromDefinition(input));
 			System.err.println("result=" + result);
 		}
-		input.jump(charClass.getDefinitionLength());
-		return result;
+		input.jump(result.getDefinitionLength());
+		return new ChallengeCharClass(result);
 	}
 
 	private Challenge manageQuantifier(TextNavigator input) {

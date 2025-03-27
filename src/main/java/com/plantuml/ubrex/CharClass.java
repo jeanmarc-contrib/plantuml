@@ -44,8 +44,16 @@ public class CharClass {
 		this.type = type;
 	}
 
+	public static CharClass normal(CharClassRaw charClassRaw) {
+		return new CharClass(charClassRaw, CharClassType.NORMAL);
+	}
+
+	public static CharClass negative(CharClassRaw charClassRaw) {
+		return new CharClass(charClassRaw, CharClassType.NEGATIVE);
+	}
+
 	public boolean matches(char ch) {
-		final boolean rawMatch = charClassRaw.matches(ch);
+		final boolean rawMatch = charClassRaw.internalMatches(ch);
 
 		if (type == CharClassType.NORMAL)
 			return rawMatch;
@@ -60,4 +68,13 @@ public class CharClass {
 
 		return new CharClass(raw, type);
 	}
+
+	public String name() {
+		return charClassRaw.name() + "-" + type.name();
+	}
+
+	public int getDefinitionLength() {
+		return charClassRaw.getDefinitionLength();
+	}
+
 }

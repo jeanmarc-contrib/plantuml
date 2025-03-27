@@ -95,7 +95,7 @@ public class ChallengeCharSet implements Challenge {
 			return new ChallengeResult(NO_MATCH);
 
 		final char ch = string.charAt(position);
-		if ((charSet.contains(ch) || CharClassRaw.matchesAny(charClasses, ch)) != reversed)
+		if ((charSet.contains(ch) || CharClassRaw.internalMatchesAny(charClasses, ch)) != reversed)
 			return new ChallengeResult(1);
 
 		return new ChallengeResult(NO_MATCH);
