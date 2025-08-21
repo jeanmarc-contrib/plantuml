@@ -50,7 +50,7 @@ public class HColorSet {
 
 	private final static HColorSet singleton = new HColorSet();
 
-	private final Map<String, String> htmlNames = new HashMap<String, String>();
+	private final Map<String, Color> colors = new HashMap<>();
 	private final Set<String> names = new TreeSet<>();
 
 	public static HColorSet instance() {
@@ -221,43 +221,36 @@ public class HColorSet {
 		register("IMPLEMENTATION", "#FFE0E0");
 	}
 
-	private void register(String s, String color) {
-		htmlNames.put(removeFirstDieseAndgoLowerCase(s), color);
+	private void register(String s, String hex) {
+		colors.put(removeFirstDieseAndgoLowerCase(s), new Color(parseHex24(hex, 1)));
 		names.add(s);
 	}
 
 	public HColor getColorOrWhite(String s) {
-		if (isColorValid(Objects.requireNonNull(s)) == false)
+		final HColor result = getColor42(s);
+		if (result == null)
 			return HColors.WHITE;
-
-		try {
-			return getColor(s);
-		} catch (NoSuchColorException e) {
-			assert false;
-			return HColors.WHITE;
-		}
+		return result;
 	}
 
 	static class Gradient {
-		private final String s1;
+		private final HColor g1;
 		private final char sep;
-		private final String s2;
-		private final HColorSet me;
+		private final HColor g2;
 
 		Gradient(HColorSet me, String s1, char sep, String s2) {
-			this.me = me;
-			this.s1 = s1;
+			this.g1 = me.build2(s1);
+			this.g2 = me.build2(s2);
 			this.sep = sep;
-			this.s2 = s2;
 		}
 
-		boolean isValid() {
-			return me.isColorValid(s1) && me.isColorValid(s2);
-		}
+//		boolean isValid() {
+//			return me.isColorValid(s1) && me.isColorValid(s2);
+//		}
 
 		// ::comment when __HAXE__
 		HColorGradient buildInternal() {
-			return HColors.gradient(me.build(s1), me.build(s2), sep);
+			return HColors.gradient(g1, g2, sep);
 		}
 		// ::done
 
@@ -305,9 +298,6 @@ public class HColorSet {
 	}
 
 	private Automatic automaticFromString(String s) {
-		if (s.startsWith("#"))
-			s = s.substring(1);
-
 		if (s.startsWith("?") == false)
 			return null;
 
@@ -319,8 +309,17 @@ public class HColorSet {
 	}
 
 	public HColor getColor(String s) throws NoSuchColorException {
-		if (isColorValid(Objects.requireNonNull(s)) == false)
+		final HColor result = getColor42(s);
+
+		if (result == null)
 			throw new NoSuchColorException();
+
+		return result;
+	}
+
+	private HColor getColor42(String s) {
+		if (s.startsWith("#"))
+			s = s.substring(1);
 
 		final Automatic automatic = automaticFromString(s);
 		if (automatic != null)
@@ -335,73 +334,88 @@ public class HColorSet {
 		if (s.equalsIgnoreCase("#transparent") || s.equalsIgnoreCase("transparent"))
 			s = "#00000000";
 
-		return build(s);
+		return build2(s);
 	}
 
-	private boolean isColorValid(String s) {
-		s = removeFirstDieseAndgoLowerCase(s);
-		final Automatic automatic = automaticFromString(s);
-		if (automatic != null)
-			return automatic.isValid();
+//	private boolean isColorValid(String s) {
+//		s = removeFirstDieseAndgoLowerCase(s);
+//		final Automatic automatic = automaticFromString(s);
+//		if (automatic != null)
+//			return automatic.isValid();
+//
+//		final Gradient gradient = gradientFromString(s);
+//		if (gradient != null)
+//			return gradient.isValid();
+//
+//		if (isColorKeywordOrHex(s))
+//			return true;
+//
+//		if (colors.containsKey(s))
+//			return true;
+//
+//		return false;
+//	}
 
-		final Gradient gradient = gradientFromString(s);
-		if (gradient != null)
-			return gradient.isValid();
+//	private static boolean isColorKeywordOrHex(String s) {
+//		final int len = s.length();
+//		if (s.equalsIgnoreCase("automatic") || s.equalsIgnoreCase("transparent"))
+//			return true;
+//
+//		if (len == 1 || len == 3 || len == 6 || len == 8) {
+//			for (int i = 0; i < len; i++)
+//				if (isHexDigit(s.charAt(i)) == false)
+//					return false;
+//
+//			return true;
+//		}
+//
+//		return false;
+//	}
 
-		if (isColorKeywordOrHex(s))
-			return true;
-
-		if (htmlNames.containsKey(s))
-			return true;
-
-		return false;
-	}
-
-	private static boolean isColorKeywordOrHex(String s) {
-		final int len = s.length();
-		if (s.equalsIgnoreCase("automatic") || s.equalsIgnoreCase("transparent"))
-			return true;
-
-		if (len == 1 || len == 3 || len == 6 || len == 8) {
-			for (int i = 0; i < len; i++)
-				if (isHexDigit(s.charAt(i)) == false)
-					return false;
-
-			return true;
-		}
-
-		return false;
-	}
-
-	private HColor build(String s) {
+	private HColor build2(String s) {
 		s = removeFirstDieseAndgoLowerCase(s);
 		final int len = s.length();
 
 		final Color color;
-		if (s.equalsIgnoreCase("transparent") || s.equalsIgnoreCase("background")) {
+		if (s.equals("transparent") || s.equals("background")) {
 			return HColors.none();
 			// ::comment when __HAXE__
-		} else if (s.equalsIgnoreCase("automatic")) {
+		} else if (s.equals("automatic")) {
 			return new HColorAutomagic();
 			// ::done
 		} else if (len == 1 && isHexDigit(s.charAt(0))) {
-			s = "" + s.charAt(0) + s.charAt(0) + s.charAt(0) + s.charAt(0) + s.charAt(0) + s.charAt(0);
-			color = new Color(Integer.parseInt(s, 16));
+			final int d = hexNibble(s.charAt(0));
+			final int v = (d << 4) | d;
+			final int rgb = (v << 16) | (v << 8) | v;
+			color = new Color(rgb);
 		} else if (len == 3 && isHexColor(s)) {
-			s = "" + s.charAt(0) + s.charAt(0) + s.charAt(1) + s.charAt(1) + s.charAt(2) + s.charAt(2);
-			color = new Color(Integer.parseInt(s, 16));
+			final int r = hexNibble(s.charAt(0));
+			final int g = hexNibble(s.charAt(1));
+			final int b = hexNibble(s.charAt(2));
+			final int rr = (r << 4) | r;
+			final int gg = (g << 4) | g;
+			final int bb = (b << 4) | b;
+			final int rgb = (rr << 16) | (gg << 8) | bb;
+			color = new Color(rgb);
 		} else if (len == 6 && isHexColor(s)) {
-			color = new Color(Integer.parseInt(s, 16));
+			final int rgb = parseHex24(s, 0);
+			color = new Color(rgb);
 		} else if (len == 8 && isHexColor(s)) {
-			color = fromRGBa(s);
+			// https://forum.plantuml.net/11606/full-opacity-alpha-compositing-support-for-svg-and-png
+			final int r = parseHexByte(s, 0);
+			final int g = parseHexByte(s, 2);
+			final int b = parseHexByte(s, 4);
+			final int a = parseHexByte(s, 6);
+			color = new Color(r, g, b, a);
 		} else {
-			final String value = Objects.requireNonNull(htmlNames.get(s));
-			color = new Color(Integer.parseInt(value.substring(1), 16));
+			color = colors.get(s);
 		}
+		if (color == null)
+			return null;
 		return HColors.simple(color);
 	}
 
-	private static boolean isHexColor(String s) {
+	private static boolean isHexColor(CharSequence s) {
 		for (int i = 0; i < s.length(); i++)
 			if (!isHexDigit(s.charAt(i)))
 				return false;
@@ -409,20 +423,33 @@ public class HColorSet {
 		return true;
 	}
 
-	private static boolean isHexDigit(final char c) {
-		return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f');
+	private static int hexNibble(char c) {
+		if (c >= '0' && c <= '9')
+			return c - '0';
+		else if (c >= 'a' && c <= 'f')
+			return c - 'a' + 10;
+		else if (c >= 'A' && c <= 'F')
+			return c - 'A' + 10;
+		else
+			return -1;
+
 	}
 
-	private Color fromRGBa(String s) {
-		// https://forum.plantuml.net/11606/full-opacity-alpha-compositing-support-for-svg-and-png
-		if (s.length() != 8)
-			throw new IllegalArgumentException();
+	private static int parseHexByte(CharSequence s, int off) {
+		final int hi = hexNibble(s.charAt(off));
+		final int lo = hexNibble(s.charAt(off + 1));
+		return (hi | lo) < 0 ? -1 : ((hi << 4) | lo);
+	}
 
-		final int red = Integer.parseInt(s.substring(0, 2), 16);
-		final int green = Integer.parseInt(s.substring(2, 4), 16);
-		final int blue = Integer.parseInt(s.substring(4, 6), 16);
-		final int alpha = Integer.parseInt(s.substring(6, 8), 16);
-		return new Color(red, green, blue, alpha);
+	private static int parseHex24(CharSequence s, int off) {
+		final int r = parseHexByte(s, off);
+		final int g = parseHexByte(s, off + 2);
+		final int b = parseHexByte(s, off + 4);
+		return (r | g | b) < 0 ? -1 : ((r << 16) | (g << 8) | b);
+	}
+
+	private static boolean isHexDigit(final char c) {
+		return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f');
 	}
 
 	private String removeFirstDieseAndgoLowerCase(String s) {
