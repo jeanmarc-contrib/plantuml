@@ -35,29 +35,11 @@
  */
 package net.sourceforge.plantuml.dedication;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.math.BigInteger;
 
 public class QBlock {
 
 	private final BigInteger big;
-
-	public static QBlock read(InputStream source, int size) throws IOException {
-		final byte[] block = new byte[size + 1];
-		for (int i = 0; i < size; i++) {
-			final int read = source.read();
-			if (read == -1) {
-				if (i == 0)
-					return null;
-
-				break;
-			}
-			block[i + 1] = (byte) read;
-		}
-		return new QBlock(new BigInteger(block));
-	}
 
 	public static QBlock fromBuffer(final byte[] buffer) {
 		final byte[] block = new byte[buffer.length + 1];
@@ -97,19 +79,4 @@ public class QBlock {
 	public String toString() {
 		return big.toByteArray().length + " " + big.toString(36);
 	}
-
-	public void write(OutputStream os, int size) throws IOException {
-		final byte[] data = big.toByteArray();
-		final int start = data.length - size;
-		if (start < 0)
-			for (int i = 0; i < -start; i++)
-				os.write(0);
-
-		for (int i = Math.max(start, 0); i < data.length; i++) {
-			int b = data[i];
-			os.write(b);
-		}
-
-	}
-
 }

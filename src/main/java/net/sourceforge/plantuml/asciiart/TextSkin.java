@@ -122,22 +122,22 @@ public class TextSkin extends Rose {
 		if (type == ComponentType.PARTICIPANT_LINE)
 			return new ComponentTextLine(type, fileFormat);
 
-		if (type == ComponentType.CONTINUE_LINE)
-			return new ComponentTextLine(type, fileFormat);
+		// if (type == ComponentType.CONTINUE_LINE)
+		//	return new ComponentTextLine(type, fileFormat);
 
 		if (type == ComponentType.DELAY_LINE)
 			return new ComponentTextLine(type, fileFormat);
 
-		if (type == ComponentType.ALIVE_BOX_CLOSE_CLOSE)
+		if (type == ComponentType.ACTIVATION_BOX_CLOSE_CLOSE)
 			return new ComponentTextActiveLine(fileFormat);
 
-		if (type == ComponentType.ALIVE_BOX_CLOSE_OPEN)
+		if (type == ComponentType.ACTIVATION_BOX_CLOSE_OPEN)
 			return new ComponentTextActiveLine(fileFormat);
 
-		if (type == ComponentType.ALIVE_BOX_OPEN_CLOSE)
+		if (type == ComponentType.ACTIVATION_BOX_OPEN_CLOSE)
 			return new ComponentTextActiveLine(fileFormat);
 
-		if (type == ComponentType.ALIVE_BOX_OPEN_OPEN)
+		if (type == ComponentType.ACTIVATION_BOX_OPEN_OPEN)
 			return new ComponentTextActiveLine(fileFormat);
 
 		if (type == ComponentType.DIVIDER)

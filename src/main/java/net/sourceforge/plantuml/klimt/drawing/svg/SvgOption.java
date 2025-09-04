@@ -38,11 +38,15 @@ package net.sourceforge.plantuml.klimt.drawing.svg;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import net.sourceforge.plantuml.klimt.color.ColorMapper;
 import net.sourceforge.plantuml.klimt.color.HColor;
 import net.sourceforge.plantuml.klimt.creole.Display;
 import net.sourceforge.plantuml.klimt.geom.XDimension2D;
+import net.sourceforge.plantuml.preproc.ConfigurationStore;
+import net.sourceforge.plantuml.preproc.OptionKey;
 import net.sourceforge.plantuml.skin.Pragma;
 
 public class SvgOption {
@@ -60,6 +64,7 @@ public class SvgOption {
 	private String title;
 	private String interactiveBaseFilename;
 	private final Map<String, String> rootAttributes = new LinkedHashMap<>();
+	private ConfigurationStore<OptionKey> options;
 
 	public String getInteractiveBaseFilename() {
 		return interactiveBaseFilename;
@@ -73,7 +78,7 @@ public class SvgOption {
 	}
 
 	// This method will be removed once Pragma SVGNEWDATA will be removed
-	
+
 	public Pragma pragma;
 
 	@Deprecated
@@ -82,13 +87,38 @@ public class SvgOption {
 		return this;
 	}
 
-
-
-	public SvgOption withTitle(Display titleDisplay) {
-		if (titleDisplay.size() > 0)
-			title = titleDisplay.get(0).toString();
+	public SvgOption withConfigurationStore(ConfigurationStore<OptionKey> options) {
+		this.options = options;
 		return this;
 	}
+
+	private String getValueFromOptions(OptionKey key) {
+		if (options == null)
+			return null;
+		return options.getValue(key);
+	}
+
+	public String getTitle() {
+		final String optionTitle = getValueFromOptions(OptionKey.SVG_TITLE);
+		if (optionTitle != null)
+			return optionTitle;
+		return title;
+	}
+
+	public String getDesc() {
+		return getValueFromOptions(OptionKey.SVG_DESC);
+	}
+
+	public SvgOption withTitle(Display titleDisplay) {
+		if (titleDisplay.size() > 0) {
+			title = StreamSupport.stream(titleDisplay.spliterator(), false) //
+	            .map(CharSequence::toString) //
+	            .collect(Collectors.joining("\n"));
+		}
+		return this;
+	}
+
+
 
 	public SvgOption withInteractive(String interactiveBaseFilename) {
 		this.interactiveBaseFilename = interactiveBaseFilename;
@@ -144,7 +174,7 @@ public class SvgOption {
 		this.font = font;
 		return this;
 	}
-	
+
 	public Map<String, String> getRootAttributes() {
 		return Collections.unmodifiableMap(rootAttributes);
 	}
@@ -196,10 +226,6 @@ public class SvgOption {
 
 	public String getFont() {
 		return font;
-	}
-
-	public String getTitle() {
-		return title;
 	}
 
 }

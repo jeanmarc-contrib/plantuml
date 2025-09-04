@@ -35,11 +35,14 @@
  */
 package net.sourceforge.plantuml.png;
 
+import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.IOException;
 import java.io.OutputStream;
 
 import net.sourceforge.plantuml.klimt.color.ColorMapper;
+import net.sourceforge.plantuml.png.quant.Quantify555;
+import net.sourceforge.plantuml.png.quant.QuantifyPacked28;
 import net.sourceforge.plantuml.security.SFile;
 import net.sourceforge.plantuml.security.SImageIO;
 import net.sourceforge.plantuml.utils.Log;
@@ -66,22 +69,16 @@ public class PngIO {
 
 	public static void write(RenderedImage image, ColorMapper mapper, OutputStream os, String metadata, int dpi)
 			throws IOException {
-		write(image, mapper, os, metadata, dpi, null);
+		BufferedImage newImage = Quantify555.quantifyMeIfPossible(image);
+		if (newImage == null)
+			newImage = QuantifyPacked28.quantifyMeIfPossible(image);
+		
+		if (newImage != null)
+			image = newImage;
+		
+		PngIOMetadata.writeWithMetadata(image, os, metadata, dpi, null, 7);
 	}
 
-	private static void write(RenderedImage image, ColorMapper mapper, OutputStream os, String metadata, int dpi,
-			String debugData) throws IOException {
-
-		// ::comment when __CORE__
-		if (metadata == null)
-			// ::done
-			SImageIO.write(image, "png", os);
-		// ::comment when __CORE__
-		else
-			PngIOMetadata.writeWithMetadata(image, os, metadata, dpi, debugData);
-		// ::done
-
-	}
 
 //	/** writes a BufferedImage of type TYPE_INT_ARGB to PNG using PNGJ */
 //	public static void writeARGB(BufferedImage bi, OutputStream os, String metadata) {

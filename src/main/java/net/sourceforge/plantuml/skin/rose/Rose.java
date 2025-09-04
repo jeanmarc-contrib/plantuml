@@ -199,7 +199,7 @@ public class Rose {
 				throw new UnsupportedOperationException(type.toString());
 		}
 
-		final Stereotype stereotype = stringsToDisplay == null ? null : stringsToDisplay.getStereotypeIfAny();
+		// final Stereotype stereotype = stringsToDisplay == null ? null : stringsToDisplay.getStereotypeIfAny();
 
 		if (type.isArrow())
 			return createComponentArrow(null, config, param, stringsToDisplay);
@@ -207,8 +207,8 @@ public class Rose {
 		if (type == ComponentType.PARTICIPANT_LINE)
 			return new ComponentRoseLine(styles[0], false, stringsToDisplay, param);
 
-		if (type == ComponentType.CONTINUE_LINE)
-			return new ComponentRoseLine(styles[0], true, stringsToDisplay, param);
+		// if (type == ComponentType.CONTINUE_LINE)
+		//	return new ComponentRoseLine(styles[0], true, stringsToDisplay, param);
 
 		if (type == ComponentType.NOTE)
 			throw new UnsupportedOperationException();
@@ -234,16 +234,16 @@ public class Rose {
 		if (type == ComponentType.GROUPING_SPACE)
 			return new ComponentRoseGroupingSpace(7);
 
-		if (type == ComponentType.ALIVE_BOX_CLOSE_CLOSE)
+		if (type == ComponentType.ACTIVATION_BOX_CLOSE_CLOSE)
 			return new ComponentRoseActiveLine(styles[0], true, true, stringsToDisplay, param);
 
-		if (type == ComponentType.ALIVE_BOX_CLOSE_OPEN)
+		if (type == ComponentType.ACTIVATION_BOX_CLOSE_OPEN)
 			return new ComponentRoseActiveLine(styles[0], true, false, stringsToDisplay, param);
 
-		if (type == ComponentType.ALIVE_BOX_OPEN_CLOSE) {
+		if (type == ComponentType.ACTIVATION_BOX_OPEN_CLOSE) {
 			return new ComponentRoseActiveLine(styles[0], false, true, stringsToDisplay, param);
 		}
-		if (type == ComponentType.ALIVE_BOX_OPEN_OPEN)
+		if (type == ComponentType.ACTIVATION_BOX_OPEN_OPEN)
 			return new ComponentRoseActiveLine(styles[0], false, false, stringsToDisplay, param);
 
 		if (type == ComponentType.DELAY_LINE)

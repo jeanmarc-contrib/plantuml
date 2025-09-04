@@ -53,6 +53,7 @@ public final class CommonCommands {
 	static public void addCommonCommands1(List<Command> cmds) {
 		addTitleCommands(cmds);
 		addCommonCommands2(cmds);
+		addCommonScaleCommands(cmds);
 		addCommonHides(cmds);
 	}
 
@@ -69,23 +70,28 @@ public final class CommonCommands {
 		cmds.add(CommandMinwidth.ME);
 		cmds.add(CommandPage.ME);
 		cmds.add(CommandRotate.ME);
+		final CommandFactorySprite factorySpriteCommand = CommandFactorySprite.ME;
+
+		cmds.add(factorySpriteCommand.createMultiLine(false));
+		cmds.add(factorySpriteCommand.createSingleLine());
+		cmds.add(CommandSpriteSvg.ME);
+		cmds.add(CommandSpriteStdlib.ME);
+		cmds.add(CommandSpriteStdlibSvg.ME);
+		cmds.add(CommandSpriteSvgMultiline.ME);
+		cmds.add(CommandSpriteFile.ME);
+
+		cmds.add(CommandStyleMultilinesCSS.ME);
+		cmds.add(CommandStyleImport.ME);
+
+	}
+
+	static public void addCommonScaleCommands(List<Command> cmds) {
 		cmds.add(CommandScale.ME);
 		cmds.add(CommandScaleWidthAndHeight.ME);
 		cmds.add(CommandScaleWidthOrHeight.ME);
 		cmds.add(CommandScaleMaxWidth.ME);
 		cmds.add(CommandScaleMaxHeight.ME);
 		cmds.add(CommandScaleMaxWidthAndHeight.ME);
-		final CommandFactorySprite factorySpriteCommand = CommandFactorySprite.ME;
-
-		cmds.add(factorySpriteCommand.createMultiLine(false));
-		cmds.add(factorySpriteCommand.createSingleLine());
-		cmds.add(CommandSpriteSvg.ME);
-		cmds.add(CommandSpriteFile.ME);
-		cmds.add(CommandSpriteSvgMultiline.ME);
-
-		cmds.add(CommandStyleMultilinesCSS.ME);
-		cmds.add(CommandStyleImport.ME);
-
 	}
 
 	static public void addCommonHides(List<Command> cmds) {

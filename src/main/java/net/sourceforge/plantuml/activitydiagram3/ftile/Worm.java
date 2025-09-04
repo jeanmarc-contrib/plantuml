@@ -37,8 +37,6 @@ package net.sourceforge.plantuml.activitydiagram3.ftile;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
@@ -58,31 +56,49 @@ import net.sourceforge.plantuml.klimt.shape.UPolygon;
 import net.sourceforge.plantuml.style.Style;
 import net.sourceforge.plantuml.utils.Direction;
 
-public class Worm implements Iterable<XPoint2D> {
+public class Worm {
 
-	private final List<XPoint2D> points = new ArrayList<>();
+	private final List<XPoint2D> points;
 	private final Style style;
 	private final Arrows arrows;
+	private UTranslate tr;
+
+	public Worm move(double dx, double dy) {
+		final Worm result = cloneEmpty();
+		if (this.tr == null)
+			result.tr = new UTranslate(dx, dy);
+		else
+			result.tr = this.tr.compose(new UTranslate(dx, dy));
+
+		result.points.addAll(points);
+		return result;
+	}
 
 	public Worm(Style style, Arrows arrows) {
+		this(style, arrows, 10);
+
+	}
+
+	private Worm(Style style, Arrows arrows, int initSize) {
 		this.style = style;
 		this.arrows = arrows;
+		this.points = new ArrayList<>(Math.max(initSize, 10));
 	}
 
 	public boolean isPureHorizontal() {
-		return points.size() == 2 && points.get(0).getY() == points.get(1).getY();
+		return size() == 2 && getPoint(0).getY() == getPoint(1).getY();
 	}
 
 	private boolean ignoreForCompression;
 
 	public Worm cloneEmpty() {
-		final Worm result = new Worm(style, arrows);
+		final Worm result = new Worm(style, arrows, size());
 		result.ignoreForCompression = this.ignoreForCompression;
 		return result;
 	}
 
 	public final void setIgnoreForCompression() {
-		if (points.size() > 0)
+		if (size() > 0)
 			throw new IllegalStateException();
 
 		this.ignoreForCompression = true;
@@ -103,9 +119,9 @@ public class Worm implements Iterable<XPoint2D> {
 			ug = ug.apply(linkStyle.goThickness(strokeValue).getStroke3());
 
 		boolean drawn = false;
-		for (int i = 0; i < points.size() - 1; i++) {
-			final XPoint2D p1 = points.get(i);
-			final XPoint2D p2 = points.get(i + 1);
+		for (int i = 0; i < size() - 1; i++) {
+			final XPoint2D p1 = getPoint(i);
+			final XPoint2D p2 = getPoint(i + 1);
 			final XLine2D line = XLine2D.line(p1, p2);
 			if (drawn == false && emphasizeDirection != null && Direction.fromVector(p1, p2) == emphasizeDirection) {
 				drawLine(ug, line, emphasizeDirection);
@@ -127,7 +143,7 @@ public class Worm implements Iterable<XPoint2D> {
 
 		if (startDecoration != null) {
 			ug = ug.apply(UStroke.withThickness(1.5));
-			final XPoint2D start = points.get(0);
+			final XPoint2D start = getPoint(0);
 			if (ignoreForCompression)
 				startDecoration.setCompressionMode(CompressionMode.ON_X);
 
@@ -135,7 +151,7 @@ public class Worm implements Iterable<XPoint2D> {
 		}
 		if (endDecoration != null) {
 			ug = ug.apply(UStroke.withThickness(1.5));
-			final XPoint2D end = points.get(points.size() - 1);
+			final XPoint2D end = getPoint(size() - 1);
 			if (ignoreForCompression)
 				endDecoration.setCompressionMode(CompressionMode.ON_X);
 
@@ -155,25 +171,17 @@ public class Worm implements Iterable<XPoint2D> {
 		ug.draw(new ULine(x2 - x1, y2 - y1));
 	}
 
-	public Worm move(double dx, double dy) {
-		final Worm result = new Worm(style, arrows);
-		for (XPoint2D pt : points)
-			result.addPoint(pt.getX() + dx, pt.getY() + dy);
-
-		return result;
-	}
-
 	public Worm moveFirstPoint(UTranslate move) {
 		final double dx = move.getDx();
 		final double dy = move.getDy();
 		if (dx != 0 && dy != 0)
 			throw new IllegalArgumentException("move=" + move);
 
-		final Worm result = new Worm(style, arrows);
-		double x0 = this.points.get(0).getX();
-		double y0 = this.points.get(0).getY();
-		double x1 = this.points.get(1).getX();
-		double y1 = this.points.get(1).getY();
+		final Worm result = new Worm(style, arrows, size());
+		double x0 = getPoint(0).getX();
+		double y0 = getPoint(0).getY();
+		double x1 = getPoint(1).getX();
+		double y1 = getPoint(1).getY();
 
 		if (dx != 0 && x0 == x1)
 			x1 += dx;
@@ -186,8 +194,8 @@ public class Worm implements Iterable<XPoint2D> {
 
 		result.addPoint(x0, y0);
 		result.addPoint(x1, y1);
-		for (int i = 2; i < this.points.size(); i++)
-			result.addPoint(this.points.get(i));
+		for (int i = 2; i < size(); i++)
+			result.addPoint(getPoint(i));
 
 		return result;
 	}
@@ -198,11 +206,11 @@ public class Worm implements Iterable<XPoint2D> {
 		if (dx != 0 && dy != 0)
 			throw new IllegalArgumentException("move=" + move);
 
-		final Worm result = new Worm(style, arrows);
-		double x8 = this.points.get(this.points.size() - 2).getX();
-		double y8 = this.points.get(this.points.size() - 2).getY();
-		double x9 = this.points.get(this.points.size() - 1).getX();
-		double y9 = this.points.get(this.points.size() - 1).getY();
+		final Worm result = new Worm(style, arrows, size());
+		double x8 = getPoint(size() - 2).getX();
+		double y8 = getPoint(size() - 2).getY();
+		double x9 = getPoint(size() - 1).getX();
+		double y9 = getPoint(size() - 1).getY();
 
 		if (dx != 0 && x8 == x9)
 			x8 += dx;
@@ -213,36 +221,40 @@ public class Worm implements Iterable<XPoint2D> {
 		x9 += dx;
 		y9 += dy;
 
-		for (int i = 0; i < this.points.size() - 2; i++)
-			result.addPoint(this.points.get(i));
+		for (int i = 0; i < size() - 2; i++)
+			result.addPoint(getPoint(i));
 
 		result.addPoint(x8, y8);
 		result.addPoint(x9, y9);
 		return result;
 	}
 
-	@Override
-	public String toString() {
-		final StringBuilder result = new StringBuilder();
-		for (int i = 0; i < points.size() - 1; i++)
-			result.append(getDirectionAtPoint(i)).append(" ");
-
-		return result + points.toString();
-	}
+//	@Override
+//	public String toString() {
+//		final StringBuilder result = new StringBuilder();
+//		for (int i = 0; i < size() - 1; i++)
+//			result.append(getDirectionAtPoint(i)).append(" ");
+//
+//		return result + points.toString();
+//	}
 
 	public void addPoint(double x, double y) {
+		if (tr != null) {
+			x -= tr.getDx();
+			y -= tr.getDy();
+		}
 		if (Double.isNaN(x))
 			throw new IllegalArgumentException();
 
 		if (Double.isNaN(y))
 			throw new IllegalArgumentException();
 
-		if (points.size() > 0) {
+		if (size() > 0) {
 			final XPoint2D last = getLast();
 			if (last.getX() == x && last.getY() == y)
 				return;
-
 		}
+
 		this.points.add(new XPoint2D(x, y));
 	}
 
@@ -250,21 +262,17 @@ public class Worm implements Iterable<XPoint2D> {
 		this.addPoint(pt.getX(), pt.getY());
 	}
 
-	public Worm translate(UTranslate translate) {
-		return move(translate.getDx(), translate.getDy());
-	}
-
 	SnakeDirection getDirection() {
-		if (points.size() < 2)
+		if (size() < 2)
 			throw new IllegalStateException();
 
-		return SnakeDirection.getDirection(points.get(0), points.get(1));
+		return SnakeDirection.getDirection(getPoint(0), getPoint(1));
 	}
 
 	String getDirectionsCode() {
 		final StringBuilder result = new StringBuilder();
-		for (int i = 0; i < points.size() - 1; i++) {
-			final Direction direction = Direction.fromVector(points.get(i), points.get(i + 1));
+		for (int i = 0; i < size() - 1; i++) {
+			final Direction direction = Direction.fromVector(getPoint(i), getPoint(i + 1));
 			result.append(direction.getShortCode());
 		}
 		return result.toString();
@@ -280,17 +288,13 @@ public class Worm implements Iterable<XPoint2D> {
 	}
 
 	private Direction getDirectionAtPoint(int i) {
-		return Direction.fromVector(points.get(i), points.get(i + 1));
-	}
-
-	public Iterator<XPoint2D> iterator() {
-		return Collections.unmodifiableCollection(points).iterator();
+		return Direction.fromVector(getPoint(i), getPoint(i + 1));
 	}
 
 	public boolean doesHorizontalCross(MinMax area) {
-		for (int i = 0; i < points.size() - 1; i++) {
-			final XPoint2D pt1 = get(i);
-			final XPoint2D pt2 = get(i + 1);
+		for (int i = 0; i < size() - 1; i++) {
+			final XPoint2D pt1 = getPoint(i);
+			final XPoint2D pt2 = getPoint(i + 1);
 			if (pt1.getY() == pt2.getY() && area.doesHorizontalCross(pt1, pt2))
 				return true;
 
@@ -299,44 +303,45 @@ public class Worm implements Iterable<XPoint2D> {
 	}
 
 	public int size() {
-		return this.points.size();
+		return points.size();
 	}
 
-	public XPoint2D get(int i) {
-		return this.points.get(i);
+	public XPoint2D getPoint(int i) {
+		return resolve(points.get(i));
 	}
 
-	public void addAll(Worm other) {
-		this.points.addAll(other.points);
-	}
-
-	public void remove(int i) {
-		this.points.remove(i);
-	}
-
-	public void add(int i, XPoint2D pt) {
-		this.points.add(i, pt);
+	private XPoint2D resolve(XPoint2D point) {
+		if (tr == null)
+			return point;
+		return tr.getTranslated(point);
 	}
 
 	public XPoint2D getFirst() {
-		return points.get(0);
+		return getPoint(0);
 	}
 
 	public XPoint2D getLast() {
-		return points.get(points.size() - 1);
+		return getPoint(size() - 1);
 	}
 
 	public double getMinX() {
-		double result = points.get(0).getX();
+		double result = getPoint(0).getX();
 		for (XPoint2D pt : points)
-			result = Math.min(result, pt.getX());
+			result = Math.min(result, resolve(pt).getX());
+		return result;
+	}
+
+	public double getMaxX() {
+		double result = getPoint(0).getX();
+		for (XPoint2D pt : points)
+			result = Math.max(result, resolve(pt).getX());
 		return result;
 	}
 
 	public double getMaxY() {
-		double result = points.get(0).getY();
+		double result = getPoint(0).getY();
 		for (XPoint2D pt : points)
-			result = Math.max(result, pt.getY());
+			result = Math.max(result, resolve(pt).getY());
 		return result;
 	}
 
@@ -344,14 +349,18 @@ public class Worm implements Iterable<XPoint2D> {
 		if (Snake.same(this.getLast(), other.getFirst()) == false)
 			throw new IllegalArgumentException();
 
-		final Worm result = new Worm(style, arrows);
-		result.points.addAll(this.points);
-		result.points.addAll(other.points);
+		final Worm result = new Worm(style, arrows, size() + other.size());
+		for (XPoint2D pt : this.points)
+			result.addPoint(this.resolve(pt));
+		for (XPoint2D pt : other.points)
+			result.addPoint(other.resolve(pt));
 		result.mergeMe(merge);
 		return result;
 	}
 
 	private void mergeMe(MergeStrategy merge) {
+		if (tr != null)
+			throw new UnsupportedOperationException();
 		boolean change = false;
 		do {
 			change = false;
@@ -371,7 +380,7 @@ public class Worm implements Iterable<XPoint2D> {
 	}
 
 	private boolean removeNullVector() {
-		for (int i = 0; i < points.size() - 1; i++) {
+		for (int i = 0; i < size() - 1; i++) {
 			final Direction dir = getDirectionAtPoint(i);
 			if (dir == null) {
 				points.remove(i);
@@ -382,7 +391,7 @@ public class Worm implements Iterable<XPoint2D> {
 	}
 
 	private boolean removeRedondantDirection() {
-		for (int i = 0; i < points.size() - 2; i++) {
+		for (int i = 0; i < size() - 2; i++) {
 			final Direction dir1 = getDirectionAtPoint(i);
 			final Direction dir2 = getDirectionAtPoint(i + 1);
 			if (dir1 == dir2) {
@@ -394,12 +403,12 @@ public class Worm implements Iterable<XPoint2D> {
 	}
 
 	private boolean removePattern1() {
-		for (int i = 0; i < points.size() - 5; i++) {
+		for (int i = 0; i < size() - 5; i++) {
 			final List<Direction> patternAt = getPatternAt(i);
 			if (Arrays.asList(Direction.DOWN, Direction.LEFT, Direction.DOWN, Direction.RIGHT).equals(patternAt)
 					|| Arrays.asList(Direction.DOWN, Direction.RIGHT, Direction.DOWN, Direction.LEFT)
 							.equals(patternAt)) {
-				final XPoint2D newPoint = new XPoint2D(points.get(i + 1).x, points.get(i + 3).y);
+				final XPoint2D newPoint = new XPoint2D(getPoint(i + 1).x, getPoint(i + 3).y);
 				points.remove(i + 3);
 				points.remove(i + 2);
 				points.remove(i + 1);
@@ -411,12 +420,12 @@ public class Worm implements Iterable<XPoint2D> {
 	}
 
 	private boolean removePattern7() {
-		if (points.size() > 4) {
+		if (size() > 4) {
 			final int i = 0;
 			final List<Direction> patternAt = getPatternAt(i);
 			if (Arrays.asList(Direction.RIGHT, Direction.DOWN, Direction.LEFT, Direction.DOWN).equals(patternAt)
-					&& points.get(i + 3).x > points.get(i).x) {
-				final XPoint2D newPoint = new XPoint2D(points.get(i + 3).x, points.get(i).y);
+					&& getPoint(i + 3).x > getPoint(i).x) {
+				final XPoint2D newPoint = new XPoint2D(getPoint(i + 3).x, getPoint(i).y);
 				points.remove(i + 2);
 				points.remove(i + 1);
 				points.add(i + 1, newPoint);
@@ -427,11 +436,11 @@ public class Worm implements Iterable<XPoint2D> {
 	}
 
 	private boolean removePattern2() {
-		for (int i = 0; i < points.size() - 5; i++) {
+		for (int i = 0; i < size() - 5; i++) {
 			final List<Direction> patternAt = getPatternAt(i);
 			if (Arrays.asList(Direction.RIGHT, Direction.DOWN, Direction.RIGHT, Direction.UP).equals(patternAt)
 					|| Arrays.asList(Direction.LEFT, Direction.DOWN, Direction.LEFT, Direction.UP).equals(patternAt)) {
-				final XPoint2D newPoint = new XPoint2D(points.get(i + 3).x, points.get(i + 1).y);
+				final XPoint2D newPoint = new XPoint2D(getPoint(i + 3).x, getPoint(i + 1).y);
 				points.remove(i + 3);
 				points.remove(i + 2);
 				points.remove(i + 1);
@@ -443,12 +452,12 @@ public class Worm implements Iterable<XPoint2D> {
 	}
 
 	private boolean removePattern3() {
-		for (int i = 0; i < points.size() - 4; i++) {
+		for (int i = 0; i < size() - 4; i++) {
 			final List<Direction> patternAt = getPatternAt(i);
 			if (Arrays.asList(Direction.DOWN, Direction.RIGHT, Direction.DOWN, Direction.RIGHT).equals(patternAt)
 					|| Arrays.asList(Direction.DOWN, Direction.LEFT, Direction.DOWN, Direction.LEFT)
 							.equals(patternAt)) {
-				final XPoint2D newPoint = new XPoint2D(points.get(i + 1).x, points.get(i + 3).y);
+				final XPoint2D newPoint = new XPoint2D(getPoint(i + 1).x, getPoint(i + 3).y);
 				points.remove(i + 3);
 				points.remove(i + 2);
 				points.remove(i + 1);
@@ -460,14 +469,14 @@ public class Worm implements Iterable<XPoint2D> {
 	}
 
 	private boolean removePattern4() {
-		final int i = points.size() - 5;
+		final int i = size() - 5;
 		if (i >= 0) {
 			final List<Direction> patternAt = getPatternAt(i);
 			if (Arrays.asList(Direction.DOWN, Direction.LEFT, Direction.DOWN, Direction.RIGHT).equals(patternAt)) {
-				final XPoint2D p1 = points.get(i + 1);
-				final XPoint2D p4 = points.get(i + 4);
+				final XPoint2D p1 = getPoint(i + 1);
+				final XPoint2D p4 = getPoint(i + 4);
 				if (p4.x > p1.x) {
-					final XPoint2D newPoint = new XPoint2D(points.get(i + 1).x, points.get(i + 3).y);
+					final XPoint2D newPoint = new XPoint2D(getPoint(i + 1).x, getPoint(i + 3).y);
 					points.remove(i + 3);
 					points.remove(i + 2);
 					points.remove(i + 1);
@@ -480,14 +489,14 @@ public class Worm implements Iterable<XPoint2D> {
 	}
 
 	private boolean removePattern5() {
-		final int i = points.size() - 5;
+		final int i = size() - 5;
 		if (i >= 0) {
 			final List<Direction> patternAt = getPatternAt(i);
 			if (Arrays.asList(Direction.DOWN, Direction.RIGHT, Direction.DOWN, Direction.LEFT).equals(patternAt)) {
-				final XPoint2D p1 = points.get(i + 1);
-				final XPoint2D p4 = points.get(i + 4);
+				final XPoint2D p1 = getPoint(i + 1);
+				final XPoint2D p4 = getPoint(i + 4);
 				if (p4.x + 4 < p1.x) {
-					final XPoint2D newPoint = new XPoint2D(points.get(i + 1).x, points.get(i + 3).y);
+					final XPoint2D newPoint = new XPoint2D(getPoint(i + 1).x, getPoint(i + 3).y);
 					points.remove(i + 3);
 					points.remove(i + 2);
 					points.remove(i + 1);
@@ -500,7 +509,7 @@ public class Worm implements Iterable<XPoint2D> {
 	}
 
 	private boolean removePattern6() {
-		for (int i = 0; i < points.size() - 2; i++) {
+		for (int i = 0; i < size() - 2; i++) {
 			if (isForwardAndBackwardAt(i)) {
 				points.remove(i + 1);
 				return true;
@@ -510,12 +519,12 @@ public class Worm implements Iterable<XPoint2D> {
 	}
 
 	private boolean removePattern8() {
-		for (int i = 0; i < points.size() - 4; i++) {
+		for (int i = 0; i < size() - 4; i++) {
 			final List<Direction> patternAt = getPatternAt(i);
 			if (Arrays.asList(Direction.LEFT, Direction.DOWN, Direction.LEFT, Direction.DOWN).equals(patternAt)
 					|| Arrays.asList(Direction.RIGHT, Direction.DOWN, Direction.RIGHT, Direction.DOWN)
 							.equals(patternAt)) {
-				final XPoint2D newPoint = new XPoint2D(points.get(i + 3).x, points.get(i + 1).y);
+				final XPoint2D newPoint = new XPoint2D(getPoint(i + 3).x, getPoint(i + 1).y);
 				points.remove(i + 3);
 				points.remove(i + 2);
 				points.remove(i + 1);
